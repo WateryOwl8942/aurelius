@@ -39,6 +39,7 @@ func testEndpoint(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageDelete(m.ChannelID, m.ID)
 
 		message, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%v Started The Vote:\n**%v**", m.Message.Author.Mention(), strings.ToUpper(m.Message.Content[6:])))
+		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(m.ChannelID, m.ID) }()
 		if err := s.MessageReactionAdd(message.ChannelID, message.ID, "✅"); err != nil {
 			fmt.Println(err)
 		}
@@ -77,11 +78,12 @@ func testEndpoint(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*discordgo.User, crossReactions []*discordgo.User) bool {
 	cmd, userID, _ := separateIntoCommand(m.Content)
-	s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Results Of**%v** Started By %v:\n✅ **%v**  ❎ **%v**",
+	msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Results Of**%v** Started By %v:\n✅ **%v**  ❎ **%v**",
 		strings.ToUpper(m.Message.Content[6:]),
 		m.Message.Author.Mention(),
 		len(checkReactions)-1,
 		len(crossReactions)-1))
+	go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 	switch cmd {
 	case "_admin":
 
@@ -106,12 +108,14 @@ func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*
 		}
 
 		if checkSenateAmount == 0 {
-			s.ChannelMessageSend(m.GuildID, "No Senators Voted In Favour")
+			msg, _ = s.ChannelMessageSend(m.GuildID, "No Senators Voted In Favour")
+			go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 			return false
 		}
 
 		if checkSenateAmount <= crossSenateAmount {
-			s.ChannelMessageSend(m.GuildID, "Senate Disagreed")
+			msg, _ := s.ChannelMessageSend(m.GuildID, "Senate Disagreed")
+			go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 			return false
 		}
 
@@ -162,32 +166,37 @@ func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("SLAVEID"))
 		member, _ := s.GuildMember(m.GuildID, user)
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Freed %v", member.User.Mention()))
+		msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Freed %v", member.User.Mention()))
+		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 		return
 
 	case "_dj":
 
 		s.GuildMemberRoleAdd(m.GuildID, user, os.Getenv("DJID"))
 		member, _ := s.GuildMember(m.GuildID, user)
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Given DJ To %v", member.User.Mention()))
+		msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Given DJ To %v", member.User.Mention()))
+		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 		return
 
 	case "_undj":
 
 		s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("DJID"))
 		member, _ := s.GuildMember(m.GuildID, user)
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Removed DJ From %v", member.User.Mention()))
+		msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Removed DJ From %v", member.User.Mention()))
+		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 		return
 
 	case "_admin":
 
 		s.GuildMemberRoleAdd(m.GuildID, user, os.Getenv("CAESARID"))
 		member, _ := s.GuildMember(m.GuildID, user)
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Given Admin To %v", member.User.Mention()))
+		msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Given Admin To %v", member.User.Mention()))
+		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 		go func() {
 			time.Sleep(time.Minute * 30)
 			s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("CAESARID"))
-			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Power Has Been Revoked From %v", member.User.Mention()))
+			msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Power Has Been Revoked From %v", member.User.Mention()))
+			go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 		}()
 
 		return
@@ -195,21 +204,24 @@ func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		member, _ := s.GuildMember(m.GuildID, user)
 		s.GuildMemberDeleteWithReason(m.GuildID, user, params)
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Kicked %v", member.User.Mention()))
+		msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Kicked %v", member.User.Mention()))
+		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 
 		return
 	case "_ban":
 
 		member, _ := s.GuildMember(m.GuildID, user)
 		s.GuildBanCreateWithReason(m.GuildID, user, params, 365)
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Banned %v", member.User.Mention()))
+		msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Banned %v", member.User.Mention()))
+		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 		return
 
 	case "_unban":
 
 		member, _ := s.GuildMember(m.GuildID, user)
 		s.GuildBanDelete(m.GuildID, user)
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Unbanned %v", member.User.Mention()))
+		msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Unbanned %v", member.User.Mention()))
+		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 
 		return
 	default:
