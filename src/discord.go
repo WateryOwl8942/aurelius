@@ -159,9 +159,23 @@ func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	case "_free":
 
-		s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("SLAVEID"))
+		s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("DJID"))
 		member, _ := s.GuildMember(m.GuildID, user)
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Freed %v", member.User.Mention()))
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Given DJ To %v", member.User.Mention()))
+		return
+
+	case "_dj":
+
+		s.GuildMemberRoleAdd(m.GuildID, user, os.Getenv("DJID"))
+		member, _ := s.GuildMember(m.GuildID, user)
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Removed DJ From %v", member.User.Mention()))
+		return
+
+	case "_undj":
+
+		// s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("SLAVEID"))
+		// member, _ := s.GuildMember(m.GuildID, user)
+		// s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Freed %v", member.User.Mention()))
 		return
 
 	case "_admin":
