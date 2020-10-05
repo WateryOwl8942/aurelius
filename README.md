@@ -3,6 +3,7 @@
 Discord bot which enforces democracy
 
 Commands:
+
 \_start \<Petition> \_slave @Mention
 
 \_start \<Petition> \_free @Mention
