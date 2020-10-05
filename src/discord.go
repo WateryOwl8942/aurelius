@@ -62,15 +62,10 @@ func startVote(s *discordgo.Session, m *discordgo.MessageCreate) {
 		for _, user := range crossReactionUsers {
 			fmt.Println(user.Username)
 		}
-
 		s.ChannelMessageDelete(m.ChannelID, m.ID)
-		if len(checkReactionUsers) > len(crossReactionUsers) {
-			if verify(s, m, checkReactionUsers, crossReactionUsers) {
-				execute(s, m)
-			} else {
-				msg, _ := s.ChannelMessageSend(m.GuildID, "Same Number Of Votes. Petition Cancelled.")
-				go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
-			}
+
+		if verify(s, m, checkReactionUsers, crossReactionUsers) {
+			execute(s, m)
 		}
 
 	} else if m.Author.Bot && m.Author.Username == "Aurelius" {
@@ -82,6 +77,7 @@ func startVote(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*discordgo.User, crossReactions []*discordgo.User) bool {
+
 	cmd, userID, _ := separateIntoCommand(m.Content)
 	msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Results Of**%v** Started By %v:\n✅ **%v**  ❎ **%v**",
 		strings.ToUpper(m.Message.Content[6:]),
@@ -115,13 +111,13 @@ func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*
 		}
 
 		if checkSenateAmount == 0 {
-			msg, _ = s.ChannelMessageSend(m.GuildID, "No Senators Voted In Favour")
+			msg, _ = s.ChannelMessageSend(m.ChannelID, "No Senators Voted In Favour")
 			go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 			return false
 		}
 
 		if checkSenateAmount <= crossSenateAmount {
-			msg, _ := s.ChannelMessageSend(m.GuildID, "Senate Disagreed")
+			msg, _ := s.ChannelMessageSend(m.ChannelID, "Senate Disagreed")
 			go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 			return false
 		}
@@ -130,31 +126,42 @@ func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*
 
 	case "_kick":
 
-		m, _ := s.GuildMember(m.GuildID, userID)
-		for _, role := range m.Roles {
+		member, _ := s.GuildMember(m.GuildID, userID)
+		for _, role := range member.Roles {
 			if role == os.Getenv("SENATUSID") {
 				return true
 			}
 		}
 
-		msg, _ := s.ChannelMessageSend(m.GuildID, "No Senators Voted")
+		msg, _ := s.ChannelMessageSend(m.ChannelID, "No Senators Voted")
 		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 
 		return false
 
 	case "_ban":
 
-		m, _ := s.GuildMember(m.GuildID, userID)
-		for _, role := range m.Roles {
+		member, _ := s.GuildMember(m.GuildID, userID)
+		for _, role := range member.Roles {
 			if role == os.Getenv("SENATUSID") {
 				return true
 			}
 		}
 
-		msg, _ := s.ChannelMessageSend(m.GuildID, "No Senators Voted")
+		msg, _ := s.ChannelMessageSend(m.ChannelID, "No Senators Voted")
 		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 
 		return false
+
+	default:
+
+		if len(checkReactions) <= len(crossReactions) {
+			msg, err := s.ChannelMessageSend(m.ChannelID, "Same Number Of Votes. Petition Cancelled.")
+			if err != nil {
+				fmt.Println(err)
+			}
+			go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
+			return false
+		}
 	}
 
 	return true
@@ -163,23 +170,35 @@ func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*
 
 func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	cmd, user, params := separateIntoCommand(m.Content)
-	fmt.Printf("CMD:%v\nUSER:%v\nPARAMS:%v", cmd, user, params)
+	fmt.Printf("CMD:%v\nUSER:%v\nPARAMS:%v\n", cmd, user, params)
 
 	switch cmd {
+
+	case "_id":
+
+		roles, _ := s.GuildRoles(m.GuildID)
+		for _, role := range roles {
+			fmt.Printf("Role:%v, ID:%v\n", role.Name, role.ID)
+		}
+
+		return
+
 	case "_slave":
 
-		s.GuildMemberRoleAdd(m.GuildID, user, os.Getenv("SLAVEID"))
+		if err := s.GuildMemberRoleAdd(m.GuildID, user, os.Getenv("SERVUSID")); err != nil {
+			fmt.Println(err)
+		}
 
 		go func() {
 			time.Sleep(time.Hour * 6)
-			s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("SLAVEID"))
+			s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("SERVUSID"))
 		}()
 
 		return
 
 	case "_free":
 
-		s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("SLAVEID"))
+		s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("SERVUSID"))
 		member, _ := s.GuildMember(m.GuildID, user)
 		msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Freed %v", member.User.Mention()))
 		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
