@@ -76,7 +76,7 @@ func testEndpoint(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*discordgo.User, crossReactions []*discordgo.User) bool {
-	cmd, _, _ := separateIntoCommand(m.Content)
+	cmd, userID, _ := separateIntoCommand(m.Content)
 	s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Results Of**%v** Started By %v:\n✅ **%v**  ❎ **%v**",
 		strings.ToUpper(m.Message.Content[6:]),
 		m.Message.Author.Mention(),
@@ -113,6 +113,28 @@ func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*
 		if checkSenateAmount <= crossSenateAmount {
 			s.ChannelMessageSend(m.GuildID, "Senate Disagreed")
 			return false
+		}
+
+		return true
+
+	case "_kick":
+
+		m, _ := s.GuildMember(m.GuildID, userID)
+		for _, role := range m.Roles {
+			if role == os.Getenv("SENATUSID") {
+				return false
+			}
+		}
+
+		return true
+
+	case "_ban":
+
+		m, _ := s.GuildMember(m.GuildID, userID)
+		for _, role := range m.Roles {
+			if role == os.Getenv("SENATUSID") {
+				return false
+			}
 		}
 
 		return true
