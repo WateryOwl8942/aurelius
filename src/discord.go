@@ -47,7 +47,7 @@ func testEndpoint(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println(err)
 		}
 
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Minute * 10)
 
 		checkReactionUsers, _ := s.MessageReactions(message.ChannelID, message.ID, "✅", 0, "", "")
 		for _, user := range checkReactionUsers {
@@ -153,29 +153,30 @@ func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		go func() {
 			time.Sleep(time.Hour * 6)
+			s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("SLAVEID"))
 		}()
 
 		return
 
 	case "_free":
 
-		s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("DJID"))
+		s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("SLAVEID"))
 		member, _ := s.GuildMember(m.GuildID, user)
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Given DJ To %v", member.User.Mention()))
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Freed %v", member.User.Mention()))
 		return
 
 	case "_dj":
 
 		s.GuildMemberRoleAdd(m.GuildID, user, os.Getenv("DJID"))
 		member, _ := s.GuildMember(m.GuildID, user)
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Removed DJ From %v", member.User.Mention()))
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Given DJ To %v", member.User.Mention()))
 		return
 
 	case "_undj":
 
-		// s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("SLAVEID"))
-		// member, _ := s.GuildMember(m.GuildID, user)
-		// s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Freed %v", member.User.Mention()))
+		s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("DJID"))
+		member, _ := s.GuildMember(m.GuildID, user)
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Removed DJ From %v", member.User.Mention()))
 		return
 
 	case "_admin":
