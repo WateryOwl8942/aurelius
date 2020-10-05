@@ -9,6 +9,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var isCaesar bool
+
 func startDiscordBot() {
 	discordClient, err := discordgo.New("Bot " + os.Getenv("CTOKEN"))
 	if err != nil {
@@ -63,8 +65,12 @@ func startVote(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		s.ChannelMessageDelete(m.ChannelID, m.ID)
 		if len(checkReactionUsers) > len(crossReactionUsers) {
-			verify(s, m, checkReactionUsers, crossReactionUsers)
-			execute(s, m)
+			if verify(s, m, checkReactionUsers, crossReactionUsers) {
+				execute(s, m)
+			} else {
+				msg, _ := s.ChannelMessageSend(m.GuildID, "Same Number Of Votes. Petition Cancelled.")
+				go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
+			}
 		}
 
 	} else if m.Author.Bot && m.Author.Username == "Aurelius" {
@@ -83,11 +89,13 @@ func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*
 		len(checkReactions)-1,
 		len(crossReactions)-1))
 	go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
+
+	var checkSenateAmount int
+	var crossSenateAmount int
+
 	switch cmd {
 	case "_admin":
 
-		var checkSenateAmount int
-		var crossSenateAmount int
 		for _, user := range checkReactions {
 			u, _ := s.GuildMember(m.GuildID, user.ID)
 			for _, role := range u.Roles {
@@ -125,24 +133,32 @@ func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*
 		m, _ := s.GuildMember(m.GuildID, userID)
 		for _, role := range m.Roles {
 			if role == os.Getenv("SENATUSID") {
-				return false
+				return true
 			}
 		}
 
-		return true
+		msg, _ := s.ChannelMessageSend(m.GuildID, "No Senators Voted")
+		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
+
+		return false
 
 	case "_ban":
 
 		m, _ := s.GuildMember(m.GuildID, userID)
 		for _, role := range m.Roles {
 			if role == os.Getenv("SENATUSID") {
-				return false
+				return true
 			}
 		}
 
-		return true
+		msg, _ := s.ChannelMessageSend(m.GuildID, "No Senators Voted")
+		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
+
+		return false
 	}
+
 	return true
+
 }
 
 func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -187,14 +203,21 @@ func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	case "_admin":
 
+		if isCaesar {
+			msg, _ := s.ChannelMessageSend(m.ChannelID, "There's An Existing Caesar Already")
+			go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
+		}
+
 		s.GuildMemberRoleAdd(m.GuildID, user, os.Getenv("CAESARID"))
 		member, _ := s.GuildMember(m.GuildID, user)
 		msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Given Admin To %v", member.User.Mention()))
+		isCaesar = true
 		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 		go func() {
 			time.Sleep(time.Minute * 30)
 			s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("CAESARID"))
 			msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Power Has Been Revoked From %v", member.User.Mention()))
+			isCaesar = false
 			go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 		}()
 
@@ -205,6 +228,7 @@ func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("CAESARID"))
 		member, _ := s.GuildMember(m.GuildID, user)
 		msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Removed Caesar From %v", member.User.Mention()))
+		isCaesar = false
 		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 		return
 
@@ -232,7 +256,6 @@ func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 
 		return
-	default:
-		fmt.Printf("\nCMD: %v, USERID: %v, PARAMS: %v\n", cmd, user, params)
+
 	}
 }
