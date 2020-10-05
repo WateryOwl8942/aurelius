@@ -1,19 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
-	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	discord, err := discordgo.New("Bot " + "authentication token")
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(discord)
+	startDiscordBot()
+
+	keepAlive("Keeping Alive")
 }
 
 func init() {
