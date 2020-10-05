@@ -26,9 +26,9 @@ func startDiscordBot() {
 
 func testEndpoint(s *discordgo.Session, m *discordgo.MessageCreate) {
 
-	// if m.ChannelID != "762411772212281374" {
-	// 	return
-	// }
+	if m.ChannelID != os.Getenv("AURELIUSCHANNEL") {
+		return
+	}
 
 	if len(m.Message.Content) < 6 {
 		s.ChannelMessageDelete(m.ChannelID, m.ID)
