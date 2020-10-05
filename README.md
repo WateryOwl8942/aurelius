@@ -16,6 +16,8 @@ Commands:
 
 \_start \<Petition> \_admin @Mention
 
+\_start \<Petition> \_unadmin @Mention
+
 \_start \<Petition> \_dj @Mention
 
 \_start \<Petition> \_undj @Mention
