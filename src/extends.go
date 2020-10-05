@@ -112,6 +112,7 @@ func extendsHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err.Error() == "strconv.ParseInt: parsing \"clean\": invalid syntax" {
 
 				num = 6
+
 			} else {
 				fmt.Println(err)
 			}
@@ -135,6 +136,7 @@ func extendsHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err.Error() == "strconv.ParseInt: parsing \"c\": invalid syntax" {
 
 				num = 6
+
 			} else {
 				fmt.Println(err)
 			}
@@ -156,6 +158,7 @@ func extendsHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err.Error() == "strconv.ParseInt: parsing \"\": invalid syntax" {
 
 				num = 5
+
 			} else {
 				fmt.Println(err)
 			}
