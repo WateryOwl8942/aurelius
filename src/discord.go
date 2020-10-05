@@ -15,7 +15,7 @@ func startDiscordBot() {
 		fmt.Println(err)
 	}
 
-	discordClient.AddHandler(testEndpoint)
+	discordClient.AddHandler(startVote)
 	discordClient.AddHandler(extendsHandler)
 
 	if err := discordClient.Open(); err != nil {
@@ -24,7 +24,7 @@ func startDiscordBot() {
 	fmt.Println("Started Bot")
 }
 
-func testEndpoint(s *discordgo.Session, m *discordgo.MessageCreate) {
+func startVote(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if m.ChannelID != os.Getenv("AURELIUSCHANNEL") {
 		return
@@ -48,19 +48,18 @@ func testEndpoint(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println(err)
 		}
 
-		time.Sleep(time.Minute * 10)
+		//Wait Time
+		time.Sleep(time.Second * 10)
 
 		checkReactionUsers, _ := s.MessageReactions(message.ChannelID, message.ID, "✅", 0, "", "")
 		for _, user := range checkReactionUsers {
 			fmt.Println(user.Username)
 		}
-		fmt.Println(len(checkReactionUsers))
 
 		crossReactionUsers, _ := s.MessageReactions(message.ChannelID, message.ID, "❎", 0, "", "")
 		for _, user := range crossReactionUsers {
 			fmt.Println(user.Username)
 		}
-		fmt.Println(len(crossReactionUsers))
 
 		s.ChannelMessageDelete(m.ChannelID, m.ID)
 		if len(checkReactionUsers) > len(crossReactionUsers) {
@@ -200,6 +199,15 @@ func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}()
 
 		return
+
+	case "_unadmin":
+
+		s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("CAESARID"))
+		member, _ := s.GuildMember(m.GuildID, user)
+		msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully Removed Caesar From %v", member.User.Mention()))
+		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
+		return
+
 	case "_kick":
 
 		member, _ := s.GuildMember(m.GuildID, user)
