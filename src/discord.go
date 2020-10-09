@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -119,7 +120,7 @@ func startVote(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		//Wait Time
-		time.Sleep(time.Minute * 5)
+		time.Sleep(time.Second * 15)
 
 		checkReactionUsers, _ := s.MessageReactions(message.ChannelID, message.ID, "✅", 0, "", "")
 		for _, user := range checkReactionUsers {
@@ -205,7 +206,8 @@ func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*
 		u, _ := s.GuildMember(m.GuildID, user)
 		for _, role := range u.Roles {
 			if role == os.Getenv("SENATUSID") {
-				msg, _ := s.ChannelMessageSend(m.ChannelID, "Senators Cannot Be Banned")
+				n := rand.Intn(300)
+				msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf(`HTTP 403 Forbidden, {"message": "Error in main.movieChats(%v, %v) 	./discord.go:%v +0x795", "code": 50013}`, &role, &n, n))
 				go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 				return false
 			}
