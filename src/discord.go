@@ -152,7 +152,7 @@ func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*
 		return false
 	}
 
-	cmd, _, _ := separateIntoCommand(m.Content)
+	cmd, user, _ := separateIntoCommand(m.Content)
 	msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Results Of**%v** Started By %v:\n✅ **%v**  ❎ **%v**", strings.ToUpper(m.Message.Content[6:]), m.Message.Author.Mention(), len(checkReactions)-1, len(crossReactions)-1))
 	go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 
@@ -201,6 +201,15 @@ func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*
 		return false
 
 	case "_ban":
+
+		u, _ := s.GuildMember(m.GuildID, user)
+		for _, role := range u.Roles {
+			if role == os.Getenv("SENATUSID") {
+				msg, _ := s.ChannelMessageSend(m.ChannelID, "Senators Cannot Be Banned")
+				go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
+				return false
+			}
+		}
 
 		if didSenatorVote && senateAmount == 0 {
 			msg, _ := s.ChannelMessageSend(m.ChannelID, "Senate Disagreed")
