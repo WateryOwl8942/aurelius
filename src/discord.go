@@ -120,7 +120,7 @@ func startVote(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		//Wait Time
-		time.Sleep(time.Second * 15)
+		time.Sleep(time.Minute * 5)
 
 		checkReactionUsers, _ := s.MessageReactions(message.ChannelID, message.ID, "✅", 0, "", "")
 		for _, user := range checkReactionUsers {
