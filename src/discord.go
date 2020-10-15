@@ -359,7 +359,7 @@ func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 		isCaesar = true
 		go func() { time.Sleep(time.Hour * 6); s.ChannelMessageDelete(msg.ChannelID, msg.ID) }()
 		go func() {
-			time.Sleep(time.Minute * 30)
+			time.Sleep(time.Minute * 10)
 			s.GuildMemberRoleRemove(m.GuildID, user, os.Getenv("CAESARID"))
 			msg, _ := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Power Has Been Revoked From %v", member.User.Mention()))
 			isCaesar = false
