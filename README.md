@@ -1,6 +1,7 @@
 # aurelius
 
-Discord bot which enforces democracy
+Discord bot which enforces democracy, and organizes the server.
+It also creates Minecraft and Terraria servers.
 
 Commands:
 
@@ -23,3 +24,18 @@ Commands:
 \_start \<Petition> \_undj @Mention
 
 \_start \<Petition>
+
+_party <Name Of Party>
+
+Text Channels Needed:
+"constitutionis"
+"rythm"
+"ocio"
+"aventino"
+
+Voice Channels Needed:
+Theatrum
+
+Roles Needed:
+WATCHING
+

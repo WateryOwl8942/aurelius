@@ -7,7 +7,9 @@ import (
 
 func keepAlive(msg string) {
 	fmt.Printf("%v\n", msg)
-	fmt.Scanln()
+
+	someChan := make(chan int)
+	<-someChan
 }
 
 func separateIntoCommand(command string) (cmd string, user string, params string) {

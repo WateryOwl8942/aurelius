@@ -22,6 +22,7 @@ func startDiscordBot() {
 	discordClient.AddHandler(extendsHandler)
 	discordClient.AddHandler(ready)
 	discordClient.AddHandler(movieChats)
+	discordClient.AddHandler(ocioChat)
 
 	if err := discordClient.Open(); err != nil {
 		fmt.Println(err)
@@ -29,10 +30,53 @@ func startDiscordBot() {
 	fmt.Println("Started Bot")
 }
 
-func movieChats(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if len(m.Content) < 7 {
+/*		EVENTS			 */
+
+//EVENT
+func ocioChat(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if m.ChannelID != os.Getenv("OCIOID") {
 		return
 	}
+
+	if m.Author.ID != os.Getenv("AURELIUSID") {
+		return
+	}
+
+	must(s.ChannelMessageDelete(m.ChannelID, m.ID))
+
+}
+
+//EVENT
+func movieChats(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if len(m.Content) < 6 {
+		return
+	}
+
+	// if m.Content == "_cleanall" {
+	// 	fmt.Println("asd")
+	// 	go func() {
+	// 		for {
+	// 			time.Sleep(time.Second * 2)
+	// 			msgs, err := s.ChannelMessages(m.ChannelID, 99, "", "", "")
+
+	// 			if err == nil {
+	// 				fmt.Println(err)
+	// 			}
+
+	// 			var msgLs []string
+
+	// 			for _, d := range msgs {
+	// 				msgLs = append(msgLs, d.ID)
+	// 			}
+
+	// 			if err := s.ChannelMessagesBulkDelete(m.ChannelID, msgLs); err != nil {
+	// 				fmt.Println(err)
+	// 			}
+	// 		}
+	// 	}()
+	// 	return
+	// }
+
 	if m.Content[0:6] != "_watch" {
 		return
 	}
@@ -89,10 +133,12 @@ func movieChats(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 }
 
+//EVENT
 func ready(s *discordgo.Session, event *discordgo.GuildMemberUpdate) {
 	fmt.Println("ready")
 }
 
+//EVENT
 func startVote(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if m.ChannelID != os.Getenv("AURELIUSCHANNEL") {
@@ -145,6 +191,9 @@ func startVote(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+/*		HELPERS			 */
+
+//HELPER
 func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*discordgo.User, crossReactions []*discordgo.User) bool {
 
 	if len(checkReactions)+len(crossReactions) < 5 {
@@ -259,6 +308,7 @@ func verify(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*
 
 }
 
+//HELPER
 func countSenators(s *discordgo.Session, m *discordgo.MessageCreate, checkReactions []*discordgo.User, crossReactions []*discordgo.User) (int, bool) {
 	var checkSenateAmount int
 	var crossSenateAmount int
@@ -284,6 +334,7 @@ func countSenators(s *discordgo.Session, m *discordgo.MessageCreate, checkReacti
 	return checkSenateAmount - crossSenateAmount, didSenateVote
 }
 
+//HELPER
 func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	cmd, user, params := separateIntoCommand(m.Content)
 	fmt.Printf("CMD:%v\nUSER:%v\nPARAMS:%v\n", cmd, user, params)
@@ -409,6 +460,7 @@ func execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+//HELPER
 func must(someErr error) {
 	if someErr != nil {
 		fmt.Println(someErr)
