@@ -24,16 +24,98 @@ func startDiscordBot() {
 	discordClient.AddHandler(movieChats)
 	discordClient.AddHandler(ocioChat)
 
+	// startOcio(discordClient)
+	startVerify(discordClient)
+
 	if err := discordClient.Open(); err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println("Started Bot")
 }
 
+func startOcio(s *discordgo.Session) {
+
+	message, err := s.ChannelMessageSend(os.Getenv("OCIOID"), `Assign Yourself The Minecraft Role`)
+	must(err)
+	if err := s.MessageReactionAdd(message.ChannelID, message.ID, "🙌"); err != nil {
+		fmt.Println(err)
+	}
+	if err := s.MessageReactionAdd(message.ChannelID, message.ID, "❌"); err != nil {
+		fmt.Println(err)
+	}
+
+	go func() {
+		for {
+			time.Sleep(time.Second)
+			//Must repeat every second
+			checkUser, _ := s.MessageReactions(message.ChannelID, message.ID, "🙌", 0, "", "")
+			if len(checkUser) <= 1 {
+				continue
+			}
+			must(s.GuildMemberRoleAdd(os.Getenv("GUILDID"), checkUser[0].ID, os.Getenv("MINECRAFTID")))
+			break
+		}
+		must(s.ChannelMessageDelete(message.ChannelID, message.ID))
+		startVerify(s)
+	}()
+	go func() {
+		for {
+			time.Sleep(time.Second)
+			//Must repeat every second
+			checkUser, _ := s.MessageReactions(message.ChannelID, message.ID, "❌", 0, "", "")
+			if len(checkUser) <= 1 {
+				continue
+			}
+			must(s.GuildMemberRoleRemove(os.Getenv("GUILDID"), checkUser[0].ID, os.Getenv("MINECRAFTID")))
+			break
+		}
+		must(s.ChannelMessageDelete(message.ChannelID, message.ID))
+		startVerify(s)
+	}()
+
+}
+
+func startVerify(s *discordgo.Session) {
+	message, _ := s.ChannelMessageSend(os.Getenv("VERIFICATIONID"), `React to This Message To Access The Server.`)
+	if err := s.MessageReactionAdd(message.ChannelID, message.ID, "🙌"); err != nil {
+		fmt.Println(err)
+	}
+	go func() {
+		for {
+			time.Sleep(time.Second)
+			//Must repeat every second
+			checkUser, _ := s.MessageReactions(message.ChannelID, message.ID, "🙌", 0, "", "")
+			if len(checkUser) <= 1 {
+				continue
+			}
+			must(s.GuildMemberRoleAdd(os.Getenv("GUILDID"), checkUser[0].ID, os.Getenv("LIBERTUSID")))
+			break
+		}
+		must(s.ChannelMessageDelete(message.ChannelID, message.ID))
+		startVerify(s)
+	}()
+}
+
 /*		EVENTS			 */
 
 //EVENT
 func ocioChat(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+	// channels, err := s.GuildChannels(m.GuildID)
+	// must(err)
+
+	// for _, channel := range channels {
+	// 	fmt.Printf("NAME: %v	ID: %v\n\n", channel.Name, channel.ID)
+	// }
+
+	// roles, err := s.GuildRoles(m.GuildID)
+	// must(err)
+
+	// fmt.Println("Roles: \n\n")
+	// for _, role := range roles {
+	// 	fmt.Printf("NAME: %v	ID: %v\n\n", role.Name, role.ID)
+	// }
+
 	if m.ChannelID != os.Getenv("OCIOID") {
 		return
 	}

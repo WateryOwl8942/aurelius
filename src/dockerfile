@@ -1,0 +1,11 @@
+FROM golang:1.14
+
+WORKDIR /go/src/app
+COPY . .
+
+RUN ls -la
+
+RUN go get -d -v ./...
+RUN go build -o aurelius
+
+CMD ["/go/src/app/aurelius"]
